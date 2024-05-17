@@ -216,7 +216,7 @@ end
 	alphaUpper := ('A'‥'Z')
    alphaLower := ('a' ‥ 'z') 
    digits :=  ('0'‥'9')
-	alphaNum := alphaUpper ∪ alphaLower ∪ digits  ∪ {'-'}      // Alphanumeric characters
+	alphaNum := alphaUpper ∪ alphaLower ∪ digits  ∪ {'-', '?'}      // Alphanumeric characters
 
 	keyWords := {"move", "move-dir",":right","face",":north","if", "loop", "repeat",
 	"facing?", "blocked?", "can-put?", "can-pick?", "can-move?", "isZero?", "not"}  // keywords  y the language is not case sensitive use only ;oercase letters:
@@ -240,7 +240,7 @@ end
 	translation.put( ":north",'n')
 	translation.put("if", 'i')
 	translation.put("loop", 'l')
-	translation.put("repeat", "e")
+	translation.put("repeat", 'e')
 	translation.put("facing?", 'C')
 	translation.put("blocked?", 'B')
 	translation.put("can-put?", 'P')
