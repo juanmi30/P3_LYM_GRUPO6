@@ -247,9 +247,9 @@ end
 	translation.put("null",'u')
 	
 	translation.put(":left",'X')
-	translation.put(":right",'Y')
+	translation.put(":right",'r')
 	translation.put(":around",'A')
-	translation.put(":north",'x')
+	translation.put(":north",'n')
 	translation.put(":south",'y')
 	translation.put(":east",'z')
 	translation.put(":west",'w')

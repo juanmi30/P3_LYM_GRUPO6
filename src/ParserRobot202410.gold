@@ -5,10 +5,12 @@ toSet(C) :=  {x|  x in C}
 ///====   mini Parser===
 
 function createParser(A):IPushdownAutomaton begin
-	Q:=(-1‥4)
+	Q:=(-1‥4) ∪ {"if", "facing", "face", "north", "south", "east", "west",
+	"blocked", "num", "canPut", "chips", "balloons", "canPick", "canMove",
+	"isZero", "not"}
 	Σ:=toSet(A)  ∪ {' ', '\n'}
 	
-	Γ:={'1'}
+	Γ:={'1', '!', '?', '*'}
 	q₀:=0
 	F:= {0}
 	M:=GPushdownAutomaton(Q,Σ,Γ,q₀,F)
@@ -16,18 +18,65 @@ SkipChars := {' ', '\n'}   // this will only  be used when testing only the pars
 	//transition for open and close  parenthesis astoplevel commands.You may use others for bllocks
 	
 	 M.delta(0,1,"(m").push("1")  //for  move number 
-    M.delta(1,-1,'#').ignore()
+    M.delta(1,"num",'#').ignore()
     
     M.delta(0,2,"(M").push("1")  //for  move-dir   id  :right 
      M.delta(2,3,'v').ignore()
 		M.delta(3,-1,'r').ignore()
     
-    M.delta(0,4,"(f").push("1")  //for  face :north 
+    M.delta(0,"face","(f").push("1")  //for  face :north 
  M.delta(4,-1,'n').ignore() 
-    
-    
+ 
+ //control estructures
+ M.delta(0, "if", "(i").push("?")
+ 
+ M.delta("if", "facing", "(C").push("!") //for facing
+ M.delta("facing", "north", "n").ignore() // :north
+ M.delta("north", 0, ')').pop("!")
+ M.delta("north", "not", "))").pop("!") //in not
+ M.delta("facing", "south", "y").ignore() //south
+ M.delta("south", 0, ')').pop("!")
+ M.delta("south", "not", "))").pop("!") //in not
+ M.delta("facing", "east", "z").ignore() //east
+ M.delta("east", 0, ')').pop("!")
+ M.delta("east", "not", "))").pop("!") //in not
+ M.delta("facing", "west", "w").ignore() //west
+ M.delta("west", 0, ')').pop("!")
+ M.delta("west", "not", "))").pop("!") //in not
+ 
+ M.delta("if", "blocked", "(B").ignore() //for block
+ M.delta("blocked", 0, ')').ignore()
+ M.delta("blocked", "not", "))").ignore() //in not
+ 
+ M.delta("if", "canPut", "(P").push("!") //for can-put
+ M.delta("canPut", "chips", "c").ignore() //chips
+ M.delta("chips", "num", '#').changeTop("!", "1")
+ M.delta("canPut", "balloons", "b").ignore() //balloons
+ M.delta("balloons", "num", '#').changeTop("!", "1")
+ 
+ M.delta("if", "canPick", "(K").push("!") //for can-pick
+ M.delta("canPick", "chips", "c").ignore() //chips
+ M.delta("canPick", "balloons", "b").ignore() //balloons
+ 
+ M.delta("if", "canMove", "(D").push("!") //for can-move
+ M.delta("canMove", "north", "n").ignore() // :north
+ M.delta("canMove", "south", "y").ignore() //south
+ M.delta("canMove", "east", "z").ignore() //east
+ M.delta("canMove", "west", "w").ignore() //west
+ 
+ M.delta("if", "isZero", "(Z").push("!") //for isZero
+ M.delta("isZero", "num", '#').changeTop("!", "1")
+ 
+ M.delta("if", "if", "(N").push("*") // for not
+ M.delta("not", 0, λ).pop("*")
+ 
+ 
+ M.delta(0, "if", ')').changeTop("?", "1") // if end
+ M.delta("if", 0, λ).pop("1")
     
     M.delta(-1, 0,')').pop("1")
+    M.delta("num", 0, ')').pop("1")
+    M.delta("num", "not", "))").pop("1")
   
 
 
