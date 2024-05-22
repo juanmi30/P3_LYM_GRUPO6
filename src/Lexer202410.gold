@@ -216,7 +216,7 @@ end
 	alphaUpper := ('A'‥'Z')
    alphaLower := ('a' ‥ 'z') 
    digits :=  ('0'‥'9')
-	alphaNum := alphaUpper ∪ alphaLower ∪ digits  ∪ {'-','?'}      // Alphanumeric characters
+	alphaNum := alphaUpper ∪ alphaLower ∪ digits  ∪ {'-','?','='}      // Alphanumeric characters
 
 	keyWords := {"defvar", "defun", "=", "move", "skip", "turn", "face", "put", "pick", "move-dir", 
 	"run-dirs", "move-face", "null", ":left", ":right", ":around", ":front", ":back",
@@ -232,7 +232,8 @@ end
 	// Operators (length 1) can be translated as themselves so you don't need to add it to the translation table
 	
 	// translation.put("\n",'@')  only use this if \n is part of the language and is not skipped @ must not be used for any other translation 
-	 
+	
+	translation.put("=",'=')
 	translation.put("defvar",'v')
 	translation.put("defun",'F')
 	translation.put("move",'m')

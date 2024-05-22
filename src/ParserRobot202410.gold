@@ -5,27 +5,91 @@ toSet(C) :=  {x|  x in C}
 ///====   mini Parser===
 
 function createParser(A):IPushdownAutomaton begin
-	Q:=(-1‥4) ∪ {"if", "facing", "face", "north", "south", "east", "west",
+	Q:=(-1‥4) ∪ {"defvar","assignment", "move", "skip", "turn", "face", "put", "pick", "move-dir", "run-dirs", "move-face"} ∪ {"if", "facing", "face", "north", "south", "east", "west",
 	"blocked", "num", "canPut", "chips", "balloons", "canPick", "canMove",
 	"isZero", "not", "loop", "repeat"}
 	Σ:=toSet(A)  ∪ {' ', '\n'}
 	
-	Γ:={'1', '!', '?', '*', '%', '/'}
+	Γ:={'1', '!', '?', '*', '%', '/','a'}
 	q₀:=0
 	F:= {0}
-	M:=GPushdownAutomaton(Q,Σ,Γ,q₀,F)
-SkipChars := {' ', '\n'}   // this will only  be used when testing only the parser as the lexer removes  SkipChars
+	M:=GPushdownAutomaton(Q,Σ,Γ,q₀,F)	
+	SkipChars := {' ', '\n'}   // this will only  be used when testing only the parser as the lexer removes  SkipChars
 	//transition for open and close  parenthesis astoplevel commands.You may use others for bllocks
-	
-	 M.delta(0,1,"(m").push("1")  //for  move number 
-    M.delta(1,"num",'#').ignore()
-    
-    M.delta(0,2,"(M").push("1")  //for  move-dir   id  :right 
-     M.delta(2,3,'v').ignore()
-		M.delta(3,-1,'r').ignore()
-    
-    M.delta(0,"face","(f").push("1")  //for  face :north 
- M.delta(4,-1,'n').ignore() 
+
+ //(defvar name n)
+ M.delta(0,"defvar","(vS#").ignore()
+ M.delta(0,"defvar","(vSS").ignore()
+ M.delta("defvar",0,")").ignore()
+
+ //assignment (= name n)
+ M.delta(0,"assignment","(=S#").ignore()
+ M.delta(0,"assignment","(=SS").ignore()
+ M.delta("assignment",0,")").ignore()
+
+ //(move n)
+ M.delta(0,"move","(m#").ignore()
+ M.delta(0,"move","(mS").ignore()
+ M.delta("move",0,")").ignore()
+ 
+ //(skip n)
+ M.delta(0,"skip","(s#").ignore()
+ M.delta(0,"skip","(sS").ignore() 
+ M.delta("skip",0,")").ignore()
+ 
+ //(turn D)
+ M.delta(0,"turn","(tX").ignore()
+ M.delta(0,"turn","(tr").ignore()
+ M.delta(0,"turn","(tA").ignore()
+ M.delta("turn",0,")").ignore()
+ 
+ //(face O)
+ M.delta(0,"face","(fn").ignore()
+ M.delta(0,"face","(fy").ignore()
+ M.delta(0,"face","(fz").ignore()
+ M.delta(0,"face","(fw").ignore()
+ M.delta("face",0,")").ignore()
+ 
+ //(put X n)
+ M.delta(0,"put","(pb#").ignore()
+ M.delta(0,"put","(pbS").ignore()
+ M.delta(0,"put","(pc#").ignore()
+ M.delta(0,"put","(pcS").ignore()
+ M.delta("put",0,")").ignore()
+ 
+ //(pick X n)
+ M.delta(0,"pick","(kb#").ignore()
+ M.delta(0,"pick","(kbS").ignore()
+ M.delta(0,"pick","(kc#").ignore()
+ M.delta(0,"pick","(kcS").ignore()
+ M.delta("pick",0,")").ignore()
+ 
+ //(move-dir n D)
+ M.delta(0,"move-dir","(M#").ignore()
+ M.delta(0,"move-dir","(MS").ignore()
+ M.delta("move-dir",0,"d)").ignore()
+ M.delta("move-dir",0,"r)").ignore()
+ M.delta("move-dir",0,"X)").ignore()
+ M.delta("move-dir",0,"q)").ignore()
+ 
+ //(run-dirs Ds)
+ M.delta(0,"run-dirs","(R").ignore()
+ M.delta("run-dirs","run-dirs","d").ignore()
+ M.delta("run-dirs","run-dirs","r").ignore()
+ M.delta("run-dirs","run-dirs","X").ignore()
+ M.delta("run-dirs","run-dirs","q").ignore()
+ M.delta("run-dirs",0,")").ignore()
+ 
+ //(move-face n O)
+ M.delta(0,"move-face","(o#").ignore()
+ M.delta(0,"move-face","(oS").ignore()
+ M.delta("move-face",0,"n)").ignore()
+ M.delta("move-face",0,"y)").ignore()
+ M.delta("move-face",0,"z)").ignore()
+ M.delta("move-face",0,"w)").ignore()
+ 
+ //(null)
+ M.delta(0,0,"(u)").ignore()
  
  //control estructures
  
@@ -97,18 +161,9 @@ SkipChars := {' ', '\n'}   // this will only  be used when testing only the pars
  M.delta(0, "repeat", ')').changeTop("/", "1")
  M.delta("repeat", 0, λ).pop("1")
     
-    M.delta(-1, 0,')').pop("1")
-    M.delta("num", 0, ')').pop("1")
-    M.delta("num", "not", "))").pop("1")
-  
-
-
+ M.delta("num", 0, ')').pop("1")
+ M.delta("num", "not", "))").pop("1")
  
-
-
-
-
-
  for each q in Q do
  	for each s in SkipChars do
  	   M.delta(q,q,λ+s).ignore()
