@@ -7,10 +7,11 @@ toSet(C) :=  {x|  x in C}
 function createParser(A):IPushdownAutomaton begin
 	Q:=(-1‥4) ∪ {"defvar","assignment", "move", "skip", "turn", "face", "put", "pick", "move-dir", "run-dirs", "move-face"} ∪ {"if", "facing", "face", "north", "south", "east", "west",
 	"blocked", "num", "canPut", "chips", "balloons", "canPick", "canMove",
-	"isZero", "not", "loop", "repeat"}
+	"isZero", "not", "loop", "repeat", "defun", "params", "funCall", "instruction",
+	"endInst", "ifBlocks"}
 	Σ:=toSet(A)  ∪ {' ', '\n'}
 	
-	Γ:={'1', '!', '?', '*', '%', '/','a'}
+	Γ:={'1', '!', '?', '*', '%', '/','a', '+', 'b', 'i', '2'}
 	q₀:=0
 	F:= {0}
 	M:=GPushdownAutomaton(Q,Σ,Γ,q₀,F)	
@@ -30,6 +31,14 @@ function createParser(A):IPushdownAutomaton begin
  //(move n)
  M.delta(0,"move","(m#").ignore()
  M.delta(0,"move","(mS").ignore()
+ 
+ //En estructura
+ M.delta(0,"move", "m#").push("b")
+ M.delta(0, "move", "mS").push("b")
+ M.delta(0, "move", "m#))").pop("i")
+ M.delta(0, "move", "mS))").pop("i")
+ M.delta("move", "endInst", λ).ignore()
+ 
  M.delta("move",0,")").ignore()
  
  //(skip n)
@@ -96,10 +105,13 @@ function createParser(A):IPushdownAutomaton begin
  //if 
  M.delta(0, "if", "(i").push("?") 
  
- M.delta("if", "facing", "(C").push("!") //for facing
+ M.delta("if", "facing", "(C").ignore() //for facing
+ 
  M.delta("facing", "north", "n").ignore() // :north
- M.delta("north", 0, ')').pop("!")
- M.delta("north", "not", "))").pop("!") //in not
+ M.delta("north", "instruction", ')').changeTop("?", "2")
+ M.delta("north", "instruction", ')').ignore()
+ M.delta("north", "not", "))").pop("*") //in not
+ 
  M.delta("facing", "south", "y").ignore() //south
  M.delta("south", 0, ')').pop("!")
  M.delta("south", "not", "))").pop("!") //in not
@@ -134,15 +146,19 @@ function createParser(A):IPushdownAutomaton begin
  M.delta("isZero", "num", '#').changeTop("!", "1")
  
  M.delta("if", "if", "(N").push("*") // for not
- M.delta("not", 0, λ).pop("*")
+ M.delta("not", "instruction", λ).changeTop("?", "2")
+ M.delta("not", "instruction", λ).changeTop("%", "%")
  
  
  M.delta(0, "if", ')').changeTop("?", "1") // if end
+ M.delta(0, "if", ')').pop("b")
+ M.delta("if", "if", ')').changeTop("?", "1")
+ M.delta("if", 0, "((").changeTop("2", "?")
  M.delta("if", 0, λ).pop("1")
  
  //loop
  M.delta(0, "loop", "(l").push("%") 
- M.delta("loop", "facing", "(C").push("!") //for facing
+ M.delta("loop", "facing", "(C").ignore() //for facing
  M.delta("loop", "blocked", "(B").ignore() //for block
  M.delta("loop", "canPut", "(P").push("!") //for can-put
  M.delta("loop", "canPick", "(K").push("!") //for can-pick
@@ -152,17 +168,45 @@ function createParser(A):IPushdownAutomaton begin
  M.delta("loop", "loop", "(N").push("*") //for not
  
  M.delta(0, "loop", ')').changeTop("%", "1") //loop end
+ M.delta("endInst", "loop", λ).changeTop("%", "1")
+ 
+ M.delta(0, "loop", ')').pop("b")
+ M.delta("loop", "loop", ')').changeTop("%", "1")
  M.delta("loop", 0, λ).pop("1")
  
  //repeatTimes
  M.delta(0, "repeat", "(e").push("/")
- M.delta("repeat", 0, '#').ignore()
+ M.delta("repeat", "instruction", '#').ignore()
+ M.delta("repeat", "instruction", 'S').ignore()
  
  M.delta(0, "repeat", ')').changeTop("/", "1")
+ 
+ M.delta(0, "repeat", ')').pop("b")
+ M.delta("repeat", "repeat", ')').changeTop("/", "1")
  M.delta("repeat", 0, λ).pop("1")
+ M.delta("endInst", "repeat", λ).changeTop("/", "1")
     
+ //Defun
+ M.delta(0, "defun", "(FS").push("+")
+ M.delta("defun", "params", '(').ignore()
+ M.delta("params", "params", 'S').ignore()
+ M.delta("params", 0, ')').ignore()
+ M.delta(0, "defun", ')').changeTop("+", "1")
+ M.delta("defun", 0, λ).pop("1")
+ 
+ //procedure call
+ M.delta(0, "funCall", "(S").ignore()
+ M.delta("funCall", "funCall", 'S').ignore()
+ M.delta("funCall", "funCall", '#').ignore()
+ M.delta("funCall", 0, ')').ignore()
+ 
  M.delta("num", 0, ')').pop("1")
  M.delta("num", "not", "))").pop("1")
+ 
+ //aux
+ M.delta("instruction", 0, "((").ignore() //si hay bloque
+ M.delta("instruction", 0, "(").push("i") //no hay bloque
+ 
  
  for each q in Q do
  	for each s in SkipChars do
