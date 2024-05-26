@@ -11,7 +11,7 @@ function createParser(A):IPushdownAutomaton begin
 	"endInst", "ifBlocks"}
 	Σ:=toSet(A)  ∪ {' ', '\n'}
 	
-	Γ:={'1', '!', '?', '*', '%', '/','a', '+', 'b', 'i', '2'}
+	Γ:={'1', '!', '?', '*', '%', '/','a', '+', 'b', 'i', '2', '¡'}
 	q₀:=0
 	F:= {0}
 	M:=GPushdownAutomaton(Q,Σ,Γ,q₀,F)	
@@ -21,57 +21,184 @@ function createParser(A):IPushdownAutomaton begin
  //(defvar name n)
  M.delta(0,"defvar","(vS#").ignore()
  M.delta(0,"defvar","(vSS").ignore()
+ //(en estructura)
+ M.delta(0, "defvar", "vS#").push("b")
+ M.delta(0, "defvar", "vSS").push("b")
+ M.delta(0, "defvar", "vS#))").pop("i")
+ M.delta(0, "defvar", "vSS))").pop("i")
+ M.delta("defvar", "endInst", λ).ignore()
+ 
  M.delta("defvar",0,")").ignore()
+ 
+ M.delta(0, "defvar", "vS#").changeTop("2", "2") //del if
+ M.delta(0, "defvar", "vSS").changeTop("2", "2") //del if
+ M.delta("defvar", "if", ")").changeTop("2", "2") //esto es del if
+ M.delta(0, 0, "vS#))").pop("¡") //esto es del if
+ M.delta(0, 0, "vSS))").pop("¡") //del if
 
  //assignment (= name n)
  M.delta(0,"assignment","(=S#").ignore()
  M.delta(0,"assignment","(=SS").ignore()
+ //(en estructura)
+ M.delta(0, "assignment", "=S#").push("b")
+ M.delta(0, "assignment", "=SS").push("b")
+ M.delta(0, "assignment", "=S#))").pop("i")
+ M.delta(0, "assignment", "=SS))").pop("i")
+ M.delta("assignment", "endInst", λ).ignore()
+ 
  M.delta("assignment",0,")").ignore()
+ 
+ M.delta(0, "assignment", "=S#").changeTop("2", "2") //del if
+ M.delta(0, "assignment", "=SS").changeTop("2", "2") //del if
+ M.delta("assignment", "if", ")").changeTop("2", "2") //esto es del if
+ M.delta(0, 0, "=S#))").pop("¡") //esto es del if
+ M.delta(0, 0, "=SS))").pop("¡") //del if
 
  //(move n)
  M.delta(0,"move","(m#").ignore()
  M.delta(0,"move","(mS").ignore()
- 
- //En estructura
+ //(en estructura)
  M.delta(0,"move", "m#").push("b")
  M.delta(0, "move", "mS").push("b")
  M.delta(0, "move", "m#))").pop("i")
  M.delta(0, "move", "mS))").pop("i")
+
  M.delta("move", "endInst", λ).ignore()
  
  M.delta("move",0,")").ignore()
  
+ M.delta(0, "move", "m#").changeTop("2", "2") //del if
+ M.delta(0, "move", "mS").changeTop("2", "2") //del if
+ M.delta("move", "if", ")").changeTop("2", "2") //esto es del if
+ M.delta(0, 0, ")").pop("¡") //esto es del if
+ M.delta(0, 0, "m#))").pop("¡") //esto es del if
+ M.delta(0, 0, "mS))").pop("¡") //del if
+ M.delta(0, 0, "(").changeTop("2", "¡") //esto es del if
+ 
  //(skip n)
  M.delta(0,"skip","(s#").ignore()
- M.delta(0,"skip","(sS").ignore() 
+ M.delta(0,"skip","(sS").ignore()
+ //(en estructura)
+ M.delta(0, "skip", "s#").push("b")
+ M.delta(0, "skip", "sS").push("b")
+ M.delta(0, "skip", "s#))").pop("i")
+ M.delta(0, "skip", "sS))").pop("i")
+ M.delta("skip", "endInst", λ).ignore()
+ 
  M.delta("skip",0,")").ignore()
+ 
+ M.delta(0, "skip", "s#").changeTop("2", "2") //del if
+ M.delta(0, "skip", "sS").changeTop("2", "2") //del if
+ M.delta("skip", "if", ")").changeTop("2", "2") //esto es del if
+ M.delta(0, 0, "s#))").pop("¡") //esto es del if
+ M.delta(0, 0, "sS))").pop("¡") //del if
  
  //(turn D)
  M.delta(0,"turn","(tX").ignore()
  M.delta(0,"turn","(tr").ignore()
  M.delta(0,"turn","(tA").ignore()
+ //(en estructura)
+ M.delta(0, "turn", "tX").push("b")
+ M.delta(0, "turn", "tr").push("b")
+ M.delta(0, "turn", "tA").push("b")
+ M.delta(0, "turn", "tX))").pop("i")
+ M.delta(0, "turn", "tr))").pop("i")
+ M.delta(0, "turn", "tA))").pop("i")
+ M.delta("turn", "endInst", λ).ignore()
+ 
  M.delta("turn",0,")").ignore()
+ 
+ M.delta(0, "turn", "tX").changeTop("2", "2") //del if
+ M.delta(0, "turn", "tr").changeTop("2", "2") //del if
+ M.delta(0, "turn", "tA").changeTop("2", "2") //del if
+ M.delta("turn", "if", ")").changeTop("2", "2") //esto es del if
+ M.delta(0, 0, "tX))").pop("¡") //esto es del if
+ M.delta(0, 0, "tr))").pop("¡") //del if
+ M.delta(0, 0, "tA))").pop("¡") //del if
  
  //(face O)
  M.delta(0,"face","(fn").ignore()
  M.delta(0,"face","(fy").ignore()
  M.delta(0,"face","(fz").ignore()
  M.delta(0,"face","(fw").ignore()
+ //(en estructura)
+ M.delta(0, "face", "fn").push("b")
+ M.delta(0, "face", "fy").push("b")
+ M.delta(0, "face", "fz").push("b")
+ M.delta(0, "face", "fw").push("b")
+ M.delta(0, "face", "fn))").pop("i")
+ M.delta(0, "face", "fy))").pop("i")
+ M.delta(0, "face", "fz))").pop("i")
+ M.delta(0, "face", "fw))").pop("i")
+ M.delta("face", "endInst", λ).ignore()
+ 
  M.delta("face",0,")").ignore()
+ 
+ M.delta(0, "face", "fn").changeTop("2", "2") //del if
+ M.delta(0, "face", "fy").changeTop("2", "2") //del if
+ M.delta(0, "face", "fz").changeTop("2", "2") //del if
+ M.delta(0, "face", "fw").changeTop("2", "2") //del if
+ M.delta("face", "if", ")").changeTop("2", "2") //esto es del if
+ M.delta(0, 0, "fn))").pop("¡") //esto es del if
+ M.delta(0, 0, "fy))").pop("¡") //del if
+ M.delta(0, 0, "fz))").pop("¡") //del if
+ M.delta(0, 0, "fw))").pop("¡") //del if
  
  //(put X n)
  M.delta(0,"put","(pb#").ignore()
  M.delta(0,"put","(pbS").ignore()
  M.delta(0,"put","(pc#").ignore()
  M.delta(0,"put","(pcS").ignore()
+ //(en estructura)
+ M.delta(0, "put", "pb#").push("b")
+ M.delta(0, "put", "pbS").push("b")
+ M.delta(0, "put", "pc#").push("b")
+ M.delta(0, "put", "pcS").push("b")
+ M.delta(0, "put", "pb#))").pop("i")
+ M.delta(0, "put", "pbS))").pop("i")
+ M.delta(0, "put", "pc#))").pop("i")
+ M.delta(0, "put", "pcS))").pop("i")
+ M.delta("put", "endInst", λ).ignore()
+ 
  M.delta("put",0,")").ignore()
+ 
+ M.delta(0, "put", "pb#").changeTop("2", "2") //del if
+ M.delta(0, "put", "fbS").changeTop("2", "2") //del if
+ M.delta(0, "put", "pc#").changeTop("2", "2") //del if
+ M.delta(0, "put", "pcS").changeTop("2", "2") //del if
+ M.delta("put", "if", ")").changeTop("2", "2") //esto es del if
+ M.delta(0, 0, "pb#))").pop("¡") //esto es del if
+ M.delta(0, 0, "pbS))").pop("¡") //del if
+ M.delta(0, 0, "pc#))").pop("¡") //del if
+ M.delta(0, 0, "pcS))").pop("¡") //del if
  
  //(pick X n)
  M.delta(0,"pick","(kb#").ignore()
  M.delta(0,"pick","(kbS").ignore()
  M.delta(0,"pick","(kc#").ignore()
  M.delta(0,"pick","(kcS").ignore()
+ //(en estructura)
+ M.delta(0, "pick", "kb#").push("b")
+ M.delta(0, "pick", "kbS").push("b")
+ M.delta(0, "pick", "kc#").push("b")
+ M.delta(0, "pick", "kcS").push("b")
+ M.delta(0, "pick", "kb#))").pop("i")
+ M.delta(0, "pick", "kbS))").pop("i")
+ M.delta(0, "pick", "kc#))").pop("i")
+ M.delta(0, "pick", "kcS))").pop("i")
+ M.delta("pick", "endInst", λ).ignore()
+ 
  M.delta("pick",0,")").ignore()
+ 
+ M.delta(0, "pick", "kb#").changeTop("2", "2") //del if
+ M.delta(0, "pick", "kbS").changeTop("2", "2") //del if
+ M.delta(0, "pick", "kc#").changeTop("2", "2") //del if
+ M.delta(0, "pick", "kcS").changeTop("2", "2") //del if
+ M.delta("pick", "if", ")").changeTop("2", "2") //esto es del if
+ M.delta(0, 0, "kb#))").pop("¡") //esto es del if
+ M.delta(0, 0, "kbS))").pop("¡") //del if
+ M.delta(0, 0, "kc#))").pop("¡") //del if
+ M.delta(0, 0, "kcS))").pop("¡") //del if
  
  //(move-dir n D)
  M.delta(0,"move-dir","(M#").ignore()
@@ -80,6 +207,30 @@ function createParser(A):IPushdownAutomaton begin
  M.delta("move-dir",0,"r)").ignore()
  M.delta("move-dir",0,"X)").ignore()
  M.delta("move-dir",0,"q)").ignore()
+ //(en estructura)
+ M.delta(0, "move-dir", "M#").push("b")
+ M.delta(0, "move-dir", "MS").push("b")
+ M.delta(0, "move-dir", "M#d))").pop("i")
+ M.delta(0, "move-dir", "M#r))").pop("i")
+ M.delta(0, "move-dir", "M#X))").pop("i")
+ M.delta(0, "move-dir", "M#q))").pop("i")
+ M.delta(0, "move-dir", "MSd))").pop("i")
+ M.delta(0, "move-dir", "MSr))").pop("i")
+ M.delta(0, "move-dir", "MSX))").pop("i")
+ M.delta(0, "move-dir", "MSq))").pop("i")
+ M.delta("move-dir", "endInst", λ).ignore()
+ 
+ M.delta(0, "move-dir", "M#").changeTop("2", "2") //del if
+ M.delta(0, "move-dir", "MS").changeTop("2", "2") //del if
+ M.delta("move-dir", "if", ")").changeTop("2", "2") //esto es del if
+ M.delta(0, 0, "M#d))").pop("¡") //esto es del if
+ M.delta(0, 0, "M#r))").pop("¡") //del if
+ M.delta(0, 0, "M#X))").pop("¡") //del if
+ M.delta(0, 0, "M#q))").pop("¡") //del if
+ M.delta(0, 0, "MSd))").pop("¡") //del if
+ M.delta(0, 0, "MSr))").pop("¡") //del if
+ M.delta(0, 0, "MSX))").pop("¡") //del if
+ M.delta(0, 0, "MSq))").pop("¡") //del if
  
  //(run-dirs Ds)
  M.delta(0,"run-dirs","(R").ignore()
@@ -87,7 +238,18 @@ function createParser(A):IPushdownAutomaton begin
  M.delta("run-dirs","run-dirs","r").ignore()
  M.delta("run-dirs","run-dirs","X").ignore()
  M.delta("run-dirs","run-dirs","q").ignore()
+ //(en estructura)
+ M.delta(0, "run-dirs", "R").push("b")
+ M.delta(0, "run-dirs", "R").changeTop("i", "i")
+ M.delta(0, "run-dirs", "R").changeTop("¡", "¡")
+ M.delta("run-dirs", 0, "))").pop("¡")
+ M.delta("run-dirs", "endInst", "))").pop("i")
+ M.delta("run-dirs", "endInst", λ).ignore()
+ 
  M.delta("run-dirs",0,")").ignore()
+ 
+ M.delta(0, "run-dirs", "R").changeTop("2", "2") //del if
+ M.delta("run-dirs", "if", ")").changeTop("2", "2") //esto es del if
  
  //(move-face n O)
  M.delta(0,"move-face","(o#").ignore()
@@ -96,9 +258,39 @@ function createParser(A):IPushdownAutomaton begin
  M.delta("move-face",0,"y)").ignore()
  M.delta("move-face",0,"z)").ignore()
  M.delta("move-face",0,"w)").ignore()
+ //(en estructura)
+ M.delta(0, "move-face", "o#").push("b")
+ M.delta(0, "move-face", "oS").push("b")
+ M.delta(0, "move-face", "o#n))").pop("i")
+ M.delta(0, "move-face", "o#y))").pop("i")
+ M.delta(0, "move-face", "o#z))").pop("i")
+ M.delta(0, "move-face", "o#w))").pop("i")
+ M.delta(0, "move-face", "oSn))").pop("i")
+ M.delta(0, "move-face", "oSy))").pop("i")
+ M.delta(0, "move-face", "oSz))").pop("i")
+ M.delta(0, "move-face", "oSw))").pop("i")
+ M.delta("move-face", "endInst", λ).ignore()
+ 
+ M.delta(0, "move-face", "o#").changeTop("2", "2") //del if
+ M.delta(0, "move-face", "oS").changeTop("2", "2") //del if
+ M.delta("move-face", "if", ")").changeTop("2", "2") //esto es del if
+ M.delta(0, 0, "o#n))").pop("¡") //esto es del if
+ M.delta(0, 0, "o#y))").pop("¡") //del if
+ M.delta(0, 0, "o#z))").pop("¡") //del if
+ M.delta(0, 0, "o#w))").pop("¡") //del if
+ M.delta(0, 0, "oSn))").pop("¡") //del if
+ M.delta(0, 0, "oSy))").pop("¡") //del if
+ M.delta(0, 0, "oSz))").pop("¡") //del if
+ M.delta(0, 0, "oSw))").pop("¡") //del if
  
  //(null)
  M.delta(0,0,"(u)").ignore()
+ //(en estructura)
+ M.delta(0, 0, "u)").push("b")
+ M.delta(0,0, "u))").pop("i")
+ 
+ M.delta(0, 0, "u)").changeTop("2", "2") //del if
+ M.delta(0, 0, "u))").pop("¡") //del if
  
  //control estructures
  
@@ -108,62 +300,70 @@ function createParser(A):IPushdownAutomaton begin
  M.delta("if", "facing", "(C").ignore() //for facing
  
  M.delta("facing", "north", "n").ignore() // :north
- M.delta("north", "instruction", ')').changeTop("?", "2")
- M.delta("north", "instruction", ')').ignore()
+ M.delta("north", "ifBlocks", ')').ignore()
+ //M.delta("north", "instruction", ')').ignore()
  M.delta("north", "not", "))").pop("*") //in not
  
  M.delta("facing", "south", "y").ignore() //south
- M.delta("south", 0, ')').pop("!")
- M.delta("south", "not", "))").pop("!") //in not
+ M.delta("south", "ifBlocks", ')').ignore()
+ M.delta("south", "not", "))").pop("*") //in not
+ 
  M.delta("facing", "east", "z").ignore() //east
- M.delta("east", 0, ')').pop("!")
- M.delta("east", "not", "))").pop("!") //in not
+ M.delta("east", "ifBlocks", ')').ignore()
+ M.delta("east", "not", "))").pop("*") //in not
+ 
  M.delta("facing", "west", "w").ignore() //west
- M.delta("west", 0, ')').pop("!")
- M.delta("west", "not", "))").pop("!") //in not
+ M.delta("west", "ifBlocks", ')').ignore()
+ M.delta("west", "not", "))").pop("*") //in not
  
  M.delta("if", "blocked", "(B").ignore() //for block
- M.delta("blocked", 0, ')').ignore()
- M.delta("blocked", "not", "))").ignore() //in not
+ M.delta("blocked", "ifBlocks", ')').ignore()
+ M.delta("blocked", "not", "))").pop("*") //in not
  
- M.delta("if", "canPut", "(P").push("!") //for can-put
+ M.delta("if", "canPut", "(P").ignore() //for can-put
  M.delta("canPut", "chips", "c").ignore() //chips
- M.delta("chips", "num", '#').changeTop("!", "1")
+ M.delta("chips", "num", '#').ignore()
+ M.delta("chips", "num", 'S').ignore()
  M.delta("canPut", "balloons", "b").ignore() //balloons
- M.delta("balloons", "num", '#').changeTop("!", "1")
+ M.delta("balloons", "num", '#').ignore()
+ M.delta("balloons", "num", 'S').ignore()
  
- M.delta("if", "canPick", "(K").push("!") //for can-pick
+ M.delta("if", "canPick", "(K").ignore() //for can-pick
  M.delta("canPick", "chips", "c").ignore() //chips
  M.delta("canPick", "balloons", "b").ignore() //balloons
  
- M.delta("if", "canMove", "(D").push("!") //for can-move
+ M.delta("if", "canMove", "(D").ignore() //for can-move
  M.delta("canMove", "north", "n").ignore() // :north
  M.delta("canMove", "south", "y").ignore() //south
  M.delta("canMove", "east", "z").ignore() //east
  M.delta("canMove", "west", "w").ignore() //west
  
- M.delta("if", "isZero", "(Z").push("!") //for isZero
- M.delta("isZero", "num", '#').changeTop("!", "1")
+ M.delta("if", "isZero", "(Z").ignore() //for isZero
+ M.delta("isZero", "num", '#').ignore()
+ M.delta("isZero", "num", 'S').ignore()
  
  M.delta("if", "if", "(N").push("*") // for not
  M.delta("not", "instruction", λ).changeTop("?", "2")
+ M.delta("ifBlocks", "instruction", λ).changeTop("?", "2")
  M.delta("not", "instruction", λ).changeTop("%", "%")
+ M.delta("ifBlocks", "instruction", λ).changeTop("%", "%")
  
  
  M.delta(0, "if", ')').changeTop("?", "1") // if end
  M.delta(0, "if", ')').pop("b")
  M.delta("if", "if", ')').changeTop("?", "1")
  M.delta("if", 0, "((").changeTop("2", "?")
+ M.delta("if", 0, "(").changeTop("2", "¡")
  M.delta("if", 0, λ).pop("1")
  
  //loop
  M.delta(0, "loop", "(l").push("%") 
  M.delta("loop", "facing", "(C").ignore() //for facing
  M.delta("loop", "blocked", "(B").ignore() //for block
- M.delta("loop", "canPut", "(P").push("!") //for can-put
- M.delta("loop", "canPick", "(K").push("!") //for can-pick
- M.delta("loop", "canMove", "(D").push("!") //for can-move
- M.delta("loop", "isZero", "(Z").push("!") //for isZero
+ M.delta("loop", "canPut", "(P").ignore() //for can-put
+ M.delta("loop", "canPick", "(K").ignore() //for can-pick
+ M.delta("loop", "canMove", "(D").ignore() //for can-move
+ M.delta("loop", "isZero", "(Z").ignore() //for isZero
   
  M.delta("loop", "loop", "(N").push("*") //for not
  
@@ -200,12 +400,13 @@ function createParser(A):IPushdownAutomaton begin
  M.delta("funCall", "funCall", '#').ignore()
  M.delta("funCall", 0, ')').ignore()
  
- M.delta("num", 0, ')').pop("1")
- M.delta("num", "not", "))").pop("1")
+ M.delta("num", "ifBlocks", ')').ignore()
+ M.delta("num", "not", "))").pop("*")
  
  //aux
  M.delta("instruction", 0, "((").ignore() //si hay bloque
- M.delta("instruction", 0, "(").push("i") //no hay bloque
+ M.delta("instruction", 0, "(").push("i")//no hay bloque
+ M.delta("instruction", 0, "(").changeTop("2", "2") //no hay bloque (if)
  
  
  for each q in Q do
